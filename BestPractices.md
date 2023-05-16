@@ -8,7 +8,7 @@ To check the server's current time across different time zones, a simple `GET` r
 
    ```cs
    [HttpGet("api/Custom/ServerTime/{timezone}")]
-   //[Authorize]
+//    [Authorize]
    public ActionResult<string> GetServerTime(string timezone) {
        try {
            TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
@@ -26,7 +26,8 @@ To check the server's current time across different time zones, a simple `GET` r
 To clear logs on the server, use a `POST` request. The [AuthorizeAttribute](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.authorization.authorizeattribute?view=aspnetcore-7.0) can restrict this operation to authenticated users.
 
   ```cs
-  [HttpPost(nameof(ClearLogs))][Authorize]
+  [HttpPost(nameof(ClearLogs))]
+//   [Authorize]
   [SwaggerOperation("Clears logs older than today")]
   public IActionResult ClearLogs() {
       try {
@@ -58,6 +59,7 @@ To check the health of the database connection, use a `GET` request. The `INonSe
   
       [HttpGet(nameof(DbConnectionHealthCheck))]
       [SwaggerOperation("returns the current database connection health")]
+      [Authorize]
       public IActionResult DbConnectionHealthCheck() {
           try {
               using var objectSpace = _nonSecuredObjectSpaceFactory.    CreateNonSecuredObjectSpace(typeof(ApplicationUser));
@@ -85,6 +87,7 @@ To get the current user identifier, use a `GET` request. This operation uses `IS
   
       [HttpGet()]
       [SwaggerOperation("returns the current user identifier")]
+      [Authorize]
       public IActionResult GetUserId() 
           => Ok(_securityProvider.GetSecurity().UserId);
   }
@@ -103,6 +106,7 @@ To retrieve persistent Business entities with serialization by projecting to ano
   
       [HttpGet(nameof(Employee)+"/{id}")]
       [SwaggerOperation("returns an Employee by its id")]
+      [Authorize]
       public ActionResult GetEmployee(int id) {
           using var objectSpace = _objectSpaceFactory.CreateObjectSpace(typeof     (Employee));
           var employee = objectSpace.GetObjectByKey<Employee>(id);
@@ -111,6 +115,7 @@ To retrieve persistent Business entities with serialization by projecting to ano
   
       [HttpGet(nameof(Employee)+"/{department}")]
       [SwaggerOperation("returns all Employees of a department")]
+      [Authorize]
       public ActionResult GetEmployees(string department) {
       using var objectSpace = _objectSpaceFactory.CreateObjectSpace(typeof     (Employee));
           return Ok(objectSpace.GetObjectsQuery<Employee>()
@@ -136,9 +141,11 @@ To stream the `Employee` Photo (`bytes`), use a `GET` request.
 
   ```cs
   [HttpGet("EmployeePhoto/{employeeId}")]
-  public FileStreamResult AuthorPhoto(int employeeId) {
+  [Authorize]
+  public FileStreamResult EmployeePhoto(int employeeId) {
       using var objectSpace = _objectSpaceFactory.CreateObjectSpace(typeof(Employee));
-      return File(new MemoryStream(objectSpace.GetObjectByKey<Employee>(employeeId).  Photo), "application/octet-stream");
+      var bytes=objectSpace.GetObjectByKey<Employee>(employeeId).Photo;
+      return File(new MemoryStream(bytes), "application/octet-stream");
   }
   ```
   
@@ -159,6 +166,7 @@ To create a new `ApplicationUser`, use a `POST` request. This operation uses the
 
       [HttpPost(nameof(CreateUser)+"/{userName}")]
       [SwaggerOperation("Create a new user from a username")]
+      [Authorize]
       public IActionResult CreateUser(string userName) {
           var strategy = (SecurityStrategy)_securityProvider.GetSecurity();
           if (!strategy.CanCreate(typeof(ApplicationUser)))
@@ -176,8 +184,3 @@ To create a new `ApplicationUser`, use a `POST` request. This operation uses the
       }
     }
   ```
-
-
-  **DOES IT MAKE SENSE**
-  ![](images/400.png)
-

@@ -149,9 +149,9 @@ To stream the `Employee` Photo (`bytes`), use a `GET` request.
   }
   ```
   
-### Create a New ApplicationUser
+### Create a New Employee
 
-To create a new `ApplicationUser`, use a `POST` request. This operation uses the `ISecurityProvider` to query for `create permissions` and the `IObjectSpaceFactory` to query for `duplicates`.
+To create a new `Employee`, use a `POST` request. This operation uses the `ISecurityProvider` to query for `create permissions` and the `IObjectSpaceFactory` to query for `duplicates`.
   
   ```cs
   [ApiController]
@@ -164,23 +164,20 @@ To create a new `ApplicationUser`, use a `POST` request. This operation uses the
           _securityProvider=securityProvider;
       }
 
-      [HttpPost(nameof(CreateUser)+"/{userName}")]
-      [SwaggerOperation("Create a new user from a username")]
+      [HttpPost(nameof(CreateUserEmployee)+"/{email}")]
+      [SwaggerOperation("Create a new user from a email")]
       [Authorize]
-      public IActionResult CreateUser(string userName) {
+      public IActionResult CreateUserEmployee(string email) {
           var strategy = (SecurityStrategy)_securityProvider.GetSecurity();
-          if (!strategy.CanCreate(typeof(ApplicationUser)))
-              return Forbid("You do not have permissions to create a user");
-        using var objectSpace = _objectSpaceFactory.CreateObjectSpace(typeof  (ApplicationUser));
-        if (objectSpace.GetObjectsQuery<ApplicationUser>().Any(user => user.  UserName == userName))
-              return ValidationProblem("Username exists");
-          var applicationUser = objectSpace.CreateObject<ApplicationUser>();
-          applicationUser.UserName = userName;
-          var random = new Random();
-        var password = new string(Enumerable.Range(0, 5).Select(_ => (char)  random.Next(33, 127)).ToArray());
-          applicationUser.SetPassword(password);
+          if (!strategy.CanCreate(typeof(Employee)))
+              return Forbid("You do not have permissions to create an employee!");
+          using var objectSpace = _objectSpaceFactory.CreateObjectSpace(typeof      (Employee));
+          if (objectSpace.FirstOrDefault<Employee>( e => e.Email == email)!=null)
+              return ValidationProblem("Email is already registered!");
+          var employee = objectSpace.CreateObject<Employee>();
+          employee.Email = email;
           objectSpace.CommitChanges();
-          return Ok(password);
+          return Ok();
       }
     }
   ```
